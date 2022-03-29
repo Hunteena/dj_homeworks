@@ -30,15 +30,17 @@ def course_factory(student_factory):
 
 
 @pytest.mark.django_db
-def test_get_course(client, course_factory):
-    course = course_factory()
+def test_get_course(client, course_factory, student_factory):
+    students_set = student_factory(_quantity=10)
+    course = course_factory(students=students_set)
 
-    response = client.get(API_PATH)
+    response = client.get(f'{API_PATH}{course.id}/')
 
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 1
-    assert course.name == data[0]['name']
+    assert course.name == data['name']
+    assert len(data['students']) == len(students_set)
+    assert set(data['students']) == set([student.pk for student in students_set])
 
 
 @pytest.mark.django_db
